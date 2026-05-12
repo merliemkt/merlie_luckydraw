@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MERLIE 럭키드로우</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; background: #f9f9f8; min-height: 100vh; }
+  .outer { position: relative; max-width: 480px; margin: 0 auto; background: #fff; min-height: 100vh; }
+
+  .screen { display: none; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 3rem 2rem; text-align: center; }
+  .screen.active { display: flex; }
+
+  .logo { font-size: 11px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; color: #999; margin-bottom: 2rem; }
+  .intro-title { font-size: 28px; font-weight: 500; color: #1a1a1a; margin-bottom: 0.8rem; }
+  .intro-sub { font-size: 15px; color: #888; margin-bottom: 3rem; line-height: 1.7; }
+
+  .btn-main { padding: 20px 56px; font-size: 17px; font-weight: 600; border-radius: 16px; border: none; cursor: pointer; background: #1a1a1a; color: #fff; transition: opacity 0.15s, transform 0.1s; letter-spacing: -0.01em; }
+  .btn-main:hover { opacity: 0.85; }
+  .btn-main:active { transform: scale(0.97); }
+
+  .result-wrap { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+  .prize-badge { display: inline-block; padding: 7px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; }
+  .p4 { background: #FAEEDA; color: #633806; }
+  .p5 { background: #E6F1FB; color: #0C447C; }
+  .p6 { background: #EAF3DE; color: #27500A; }
+  .p7 { background: #EEEDFE; color: #3C3489; }
+  .p8 { background: #f5f5f3; color: #888; border: 0.5px solid #e0e0e0; }
+
+  .result-name { font-size: 34px; font-weight: 500; color: #1a1a1a; }
+  .result-msg { font-size: 15px; color: #888; line-height: 1.7; }
+  .btn-again { margin-top: 2.5rem; padding: 16px 40px; font-size: 15px; font-weight: 600; border-radius: 14px; border: none; cursor: pointer; background: #1a1a1a; color: #fff; transition: opacity 0.15s, transform 0.1s; }
+  .btn-again:hover { opacity: 0.85; }
+  .btn-again:active { transform: scale(0.97); }
+
+  .empty-title { font-size: 22px; font-weight: 500; color: #1a1a1a; margin-bottom: 0.6rem; }
+  .empty-sub { font-size: 15px; color: #888; }
+
+  .admin-toggle { position: fixed; top: 16px; right: 16px; font-size: 11px; color: #aaa; cursor: pointer; padding: 5px 10px; border-radius: 8px; border: 0.5px solid #e0e0e0; background: #fff; z-index: 100; }
+  .admin-toggle:hover { background: #f5f5f3; }
+
+  .admin-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 200; align-items: flex-end; }
+  .admin-overlay.open { display: flex; }
+  .admin-sheet { background: #fff; border-radius: 20px 20px 0 0; width: 100%; max-height: 85vh; overflow-y: auto; padding: 1.5rem; }
+  .sheet-handle { width: 40px; height: 4px; background: #e0e0e0; border-radius: 2px; margin: 0 auto 1.5rem; }
+  .sheet-title { font-size: 16px; font-weight: 500; color: #1a1a1a; margin-bottom: 1.5rem; }
+
+  .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 1.5rem; }
+  .stat-card { background: #f9f9f8; border-radius: 10px; padding: 14px 10px; text-align: center; }
+  .stat-num { font-size: 20px; font-weight: 500; color: #1a1a1a; }
+  .stat-label { font-size: 11px; color: #999; margin-top: 4px; }
+
+  .section-label { font-size: 11px; color: #999; margin-bottom: 8px; letter-spacing: 0.06em; text-transform: uppercase; }
+  .prize-table { width: 100%; border-collapse: collapse; margin-bottom: 1.5rem; }
+  .prize-table th { font-size: 11px; color: #aaa; font-weight: 400; text-align: left; padding: 6px 8px; border-bottom: 0.5px solid #eee; }
+  .prize-table td { font-size: 13px; color: #1a1a1a; padding: 10px 8px; border-bottom: 0.5px solid #eee; }
+  .prize-table td.muted { color: #aaa; font-size: 12px; }
+  .remain-zero { color: #ccc !important; text-decoration: line-through; }
+
+  .history-table { width: 100%; border-collapse: collapse; }
+  .history-table th { font-size: 11px; color: #aaa; font-weight: 400; text-align: left; padding: 6px 8px; border-bottom: 0.5px solid #eee; }
+  .history-table td { font-size: 12px; color: #1a1a1a; padding: 8px 8px; border-bottom: 0.5px solid #f5f5f3; }
+  .history-wrap { max-height: 200px; overflow-y: auto; margin-bottom: 1rem; }
+
+  .btn-row-admin { display: flex; gap: 8px; }
+  .btn-sm { flex: 1; padding: 11px 12px; font-size: 13px; border-radius: 10px; border: 0.5px solid #e0e0e0; background: transparent; color: #666; cursor: pointer; }
+  .btn-sm:hover { background: #f5f5f3; }
+  .btn-close { width: 100%; padding: 14px; font-size: 14px; font-weight: 500; border-radius: 12px; border: none; background: #1a1a1a; color: #fff; cursor: pointer; margin-top: 1rem; }
+  .saving { font-size: 11px; color: #bbb; margin-top: 10px; text-align: center; }
+</style>
+</head>
+<body>
+<div class="outer">
+  <button class="admin-toggle" onclick="toggleAdmin()">관리자</button>
+
+  <div class="screen active" id="screenIntro">
+    <p class="logo">MERLIE</p>
+    <h1 class="intro-title">럭키드로우</h1>
+    <p class="intro-sub">멀리와 함께해주셔서 감사해요.<br>버튼을 눌러 경품을 확인하세요!</p>
+    <button class="btn-main" onclick="draw()">두드려보기 🐾</button>
+  </div>
+
+  <div class="screen" id="screenResult">
+    <p class="logo">MERLIE</p>
+    <div class="result-wrap" id="resultWrap"></div>
+    <button class="btn-again" onclick="goIntro()">다시 뽑기</button>
+  </div>
+
+  <div class="screen" id="screenEmpty">
+    <p class="logo">MERLIE</p>
+    <p class="empty-title">경품이 모두 소진되었어요</p>
+    <p class="empty-sub">다음 기회에 만나요 🐾</p>
+  </div>
+</div>
+
+<div class="admin-overlay" id="adminOverlay" onclick="closeAdminOutside(event)">
+  <div class="admin-sheet" id="adminSheet">
+    <div class="sheet-handle"></div>
+    <p class="sheet-title">관리자 패널</p>
+
+    <div class="stat-grid" id="statGrid"></div>
+
+    <p class="section-label">경품 현황</p>
+    <table class="prize-table">
+      <thead><tr><th>등수</th><th>경품</th><th>전체</th><th>당첨</th><th>잔여</th></tr></thead>
+      <tbody id="prizeTable"></tbody>
+    </table>
+
+    <p class="section-label">추첨 기록</p>
+    <div class="history-wrap">
+      <table class="history-table">
+        <thead><tr><th>#</th><th>등수</th><th>경품</th><th>시각</th></tr></thead>
+        <tbody id="historyTable"></tbody>
+      </table>
+    </div>
+
+    <div class="btn-row-admin">
+      <button class="btn-sm" onclick="resetAll()">전체 초기화</button>
+      <button class="btn-sm" onclick="exportCSV()">CSV 내보내기</button>
+    </div>
+    <button class="btn-close" onclick="toggleAdmin()">닫기</button>
+    <p class="saving" id="savingMsg"></p>
+  </div>
+</div>
+
+<script>
+  const PRIZES = [
+    { rank: '4등', name: '론타노 백팩',     total: 1,    cls: 'p4' },
+    { rank: '5등', name: '마일드 하네스',   total: 3,    cls: 'p5' },
+    { rank: '6등', name: '맥세이프 거치대', total: 5,    cls: 'p6' },
+    { rank: '7등', name: '자동리드줄',      total: 10,   cls: 'p7' },
+    { rank: '8등', name: '풉백',            total: 2000, cls: 'p8' },
+  ];
+
+  const STORAGE_KEY = 'merlie-draw-data';
+  let remain, won, history, totalDraws;
+
+  function loadData() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const d = JSON.parse(raw);
+        remain = d.remain || PRIZES.map(p => p.total);
+        won = d.won || PRIZES.map(() => 0);
+        history = d.history || [];
+        totalDraws = d.totalDraws || 0;
+        return;
+      }
+    } catch(e) {}
+    remain = PRIZES.map(p => p.total);
+    won = PRIZES.map(() => 0);
+    history = [];
+    totalDraws = 0;
+  }
+
+  function saveData() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ remain, won, history, totalDraws }));
+      const t = new Date().toLocaleTimeString('ko-KR');
+      document.getElementById('savingMsg').textContent = '저장됨 ' + t;
+    } catch(e) {
+      document.getElementById('savingMsg').textContent = '저장 실패';
+    }
+  }
+
+  function totalRemain() { return remain.reduce((a, b) => a + b, 0); }
+
+  function pickPrize() {
+    const total = totalRemain();
+    if (total === 0) return null;
+    let r = Math.floor(Math.random() * total);
+    for (let i = 0; i < remain.length; i++) {
+      if (r < remain[i]) return i;
+      r -= remain[i];
+    }
+    return remain.length - 1;
+  }
+
+  function show(id) {
+    ['screenIntro','screenResult','screenEmpty'].forEach(s =>
+      document.getElementById(s).classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+
+  function draw() {
+    if (totalRemain() === 0) { show('screenEmpty'); return; }
+    const idx = pickPrize();
+    remain[idx]--;
+    won[idx]++;
+    totalDraws++;
+    const p = PRIZES[idx];
+    const timeStr = new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    history.unshift({ seq: totalDraws, rank: p.rank, name: p.name, cls: p.cls, time: timeStr });
+
+    const msg = idx === 0 ? '축하드려요! 직원에게 알려주세요 🎉'
+      : idx <= 2 ? '당첨! 직원에게 알려주세요 🎊'
+      : idx === 3 ? '당첨되셨어요! 직원에게 알려주세요'
+      : '감사해요! 직원에게 풉백을 받아가세요 🐾';
+
+    document.getElementById('resultWrap').innerHTML =
+      '<span class="prize-badge ' + p.cls + '">' + p.rank + '</span>' +
+      '<p class="result-name">' + p.name + '</p>' +
+      '<p class="result-msg">' + msg + '</p>';
+
+    show('screenResult');
+    renderAll();
+    saveData();
+  }
+
+  function goIntro() { show('screenIntro'); }
+
+  function toggleAdmin() {
+    document.getElementById('adminOverlay').classList.toggle('open');
+    renderAll();
+  }
+
+  function closeAdminOutside(e) {
+    if (e.target === document.getElementById('adminOverlay')) toggleAdmin();
+  }
+
+  function renderAll() {
+    const highWin = won.slice(0, 4).reduce((a, b) => a + b, 0);
+    document.getElementById('statGrid').innerHTML =
+      '<div class="stat-card"><p class="stat-num">' + totalDraws.toLocaleString() + '</p><p class="stat-label">총 추첨</p></div>' +
+      '<div class="stat-card"><p class="stat-num">' + highWin + '</p><p class="stat-label">고등수 당첨</p></div>' +
+      '<div class="stat-card"><p class="stat-num">' + totalRemain().toLocaleString() + '</p><p class="stat-label">잔여 경품</p></div>';
+
+    document.getElementById('prizeTable').innerHTML = PRIZES.map((p, i) => {
+      const zero = remain[i] === 0;
+      return '<tr>' +
+        '<td><span class="prize-badge ' + p.cls + '">' + p.rank + '</span></td>' +
+        '<td>' + p.name + '</td>' +
+        '<td class="muted">' + p.total.toLocaleString() + '</td>' +
+        '<td>' + won[i].toLocaleString() + '</td>' +
+        '<td class="' + (zero ? 'remain-zero' : '') + '">' + remain[i].toLocaleString() + '</td>' +
+      '</tr>';
+    }).join('');
+
+    const tbody = document.getElementById('historyTable');
+    if (history.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="4" style="color:#bbb;padding:12px 8px;">추첨 기록이 없어요</td></tr>';
+    } else {
+      tbody.innerHTML = history.map(h =>
+        '<tr>' +
+          '<td style="color:#bbb">' + h.seq + '</td>' +
+          '<td><span class="prize-badge ' + h.cls + '" style="padding:3px 10px;font-size:11px;">' + h.rank + '</span></td>' +
+          '<td>' + h.name + '</td>' +
+          '<td style="color:#bbb">' + h.time + '</td>' +
+        '</tr>'
+      ).join('');
+    }
+  }
+
+  function resetAll() {
+    if (!confirm('전체 초기화하면 모든 기록이 삭제돼요. 계속할까요?')) return;
+    remain = PRIZES.map(p => p.total);
+    won = PRIZES.map(() => 0);
+    history = [];
+    totalDraws = 0;
+    show('screenIntro');
+    toggleAdmin();
+    saveData();
+  }
+
+  function exportCSV() {
+    if (history.length === 0) { alert('추첨 기록이 없어요.'); return; }
+    const rows = [['순번','등수','경품','시각']];
+    history.forEach(h => rows.push([h.seq, h.rank, h.name, h.time]));
+    const csv = '\uFEFF' + rows.map(r => r.join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'merlie_draw_' + new Date().toLocaleDateString('ko-KR').replace(/\. /g,'-').replace('.','-') + '.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  loadData();
+  renderAll();
+</script>
+</body>
+</html>
